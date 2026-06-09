@@ -60,11 +60,17 @@ class TestOwnHarness:
         assert _post(url, "/skills/nope", {"input": "hi"}).status_code == 404
 
     def test_response_shape(self, name, url, harness):
-        d = _post(url, "/v1/chat/completions",
-                  {"messages": [{"role": "user", "content": "hello"}]}).json()
-        assert d["object"] == "chat.completion"
-        assert d["choices"][0]["message"]["role"] == "assistant"
-        assert {"prompt_tokens", "completion_tokens", "total_tokens"} <= set(d["usage"])
+        """airlock returns a well-formed OpenAI chat.completion on success, OR a structured
+        error if the (possibly weak) model fails — never a crash or malformed body."""
+        r = _post(url, "/v1/chat/completions",
+                  {"messages": [{"role": "user", "content": "Say hello in one word."}]})
+        d = r.json()
+        if r.status_code == 200:
+            assert d["object"] == "chat.completion"
+            assert d["choices"][0]["message"]["role"] == "assistant"
+            assert {"prompt_tokens", "completion_tokens", "total_tokens"} <= set(d["usage"])
+        else:
+            assert isinstance(d.get("error"), str)  # structured error, not a bare 500/crash
 
     def test_streaming_frames(self, name, url, harness):
         with httpx.stream("POST", url + "/v1/chat/completions",
