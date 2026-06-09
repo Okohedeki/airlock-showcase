@@ -1,0 +1,64 @@
+# airlock-showcase — one container per harness, all driven by a REAL local LLM.
+# Prerequisite: a tool-calling llama-server on the host :11434 (see README.md).
+#
+#   ./verify.sh                       # build + up + run the test grid + tear down
+#   docker compose up -d --build      # just bring the harnesses up
+#   docker compose run --rm harness-tests
+#
+# Ports: langgraph 3101 · smolagents 3102 · crewai 3103 · openai-agents 3104 ·
+#        claude 3105 · custom 3106 (TERMINAL — observe-only).
+
+x-env: &env
+  OPENAI_API_BASE: "http://host.docker.internal:11434/v1"
+  OPENAI_API_KEY: "sk-not-needed"
+  OPENAI_MODEL: "local"
+x-hosts: &hosts ["host.docker.internal:host-gateway"]
+
+services:
+  langgraph:
+    build: { context: ., dockerfile: Dockerfile.harness, args: { HARNESS: langgraph } }
+    ports: ["3101:3000"]
+    environment: *env
+    extra_hosts: *hosts
+  smolagents:
+    build: { context: ., dockerfile: Dockerfile.harness, args: { HARNESS: smolagents } }
+    ports: ["3102:3000"]
+    environment: *env
+    extra_hosts: *hosts
+  crewai:
+    build: { context: ., dockerfile: Dockerfile.harness, args: { HARNESS: crewai } }
+    ports: ["3103:3000"]
+    environment: *env
+    extra_hosts: *hosts
+  openai-agents:
+    build: { context: ., dockerfile: Dockerfile.harness, args: { HARNESS: openai-agents } }
+    ports: ["3104:3000"]
+    environment: *env
+    extra_hosts: *hosts
+  claude:
+    build: { context: ., dockerfile: Dockerfile.harness, args: { HARNESS: claude } }
+    ports: ["3105:3000"]
+    environment: *env
+    extra_hosts: *hosts
+  custom:
+    build: { context: ., dockerfile: Dockerfile.harness, args: { HARNESS: custom } }
+    ports: ["3106:3000"]
+    environment: *env
+    extra_hosts: *hosts
+  harness-tests:
+    build: { context: ., dockerfile: tests/Dockerfile }
+    environment:
+      LANGGRAPH_URL: "http://langgraph:3000"
+      SMOLAGENTS_URL: "http://smolagents:3000"
+      CREWAI_URL: "http://crewai:3000"
+      OPENAI_AGENTS_URL: "http://openai-agents:3000"
+      CLAUDE_URL: "http://claude:3000"
+      CUSTOM_URL: "http://custom:3000"
+    depends_on:
+      langgraph: { condition: service_healthy }
+      smolagents: { condition: service_healthy }
+      crewai: { condition: service_healthy }
+      openai-agents: { condition: service_healthy }
+      claude: { condition: service_healthy }
+      custom: { condition: service_healthy }
+    restart: "no"

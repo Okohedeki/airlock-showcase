@@ -1,0 +1,1 @@
+# custom is a TERMINAL harness — no framework; airlock provides the runtime.

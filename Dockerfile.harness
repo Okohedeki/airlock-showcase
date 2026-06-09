@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+#
+# Per-harness showcase image: install airlock (the runtime UNDER TEST) from the public
+# repo, then the harness folder + its framework. One image per harness keeps each
+# framework's deps isolated (crewai conflicts with the langchain stack).
+#
+FROM python:3.11-slim
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PORT=3000 AIRLOCK_LOG_LEVEL=INFO
+
+# airlock-agent from the public repo — pin a tag/branch/sha with --build-arg AIRLOCK_REF=...
+ARG AIRLOCK_REF=fix/harness-extraction-and-approval
+RUN pip install --no-cache-dir \
+    "git+https://github.com/Okohedeki/airlock.git@${AIRLOCK_REF}#subdirectory=python/agent-runtime"
+
+# the harness folder (agent.py + worker.yaml + requirements.txt) selected by --build-arg HARNESS
+ARG HARNESS
+WORKDIR /app/worker
+COPY ${HARNESS}/ ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 3000
+HEALTHCHECK --interval=10s --timeout=3s --retries=5 --start-period=60s \
+  CMD python -c "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('PORT','3000')+'/healthz').status==200 else 1)" || exit 1
+CMD ["python", "-m", "airlock_agent"]
