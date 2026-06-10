@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>airlock · showcase — run any AI agent as a controlled service</title>
+<meta name="description" content="Open-source, runnable proof that airlock runs any-framework agent (LangGraph, smolagents, CrewAI, OpenAI Agents, Claude SDK, or your own code) as a controlled HTTP service — verified across 6 harnesses.">
+<style>
+  :root{
+    --bg:#0a0c12; --bg2:#0e1119; --card:#11151f; --line:#1e2533;
+    --fg:#e7ecf3; --mut:#8b97a8; --dim:#5e697a;
+    --acc:#5eead4; --acc2:#7c9cff; --ok:#3ddc84; --warn:#ffb454; --bad:#ff6b6b;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#141b2b 0%,var(--bg) 55%);color:var(--fg);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+  code,kbd{font-family:var(--mono);font-size:.92em}
+  .mono{font-family:var(--mono)}
+
+  header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(10,12,18,.78);backdrop-filter:blur(8px);z-index:10}
+  .nav{display:flex;align-items:center;gap:18px;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
+  .brand .dot{width:11px;height:11px;border-radius:3px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
+  .brand small{color:var(--mut);font-weight:500}
+  .nav .spacer{flex:1}
+  .nav a{color:var(--mut);font-size:.93rem}
+  .nav a:hover{color:var(--fg);text-decoration:none}
+  .btn{display:inline-block;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:9px 15px;border-radius:9px;font-weight:600;font-size:.92rem}
+  .btn:hover{border-color:var(--acc);text-decoration:none}
+  .btn.pri{background:linear-gradient(180deg,#1a2740,#131c2e);border-color:#2b3c5e}
+
+  .hero{padding:74px 0 30px}
+  .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg2);color:var(--mut);padding:5px 12px;border-radius:999px;font-size:.8rem}
+  .pill b{color:var(--ok)}
+  h1{font-size:clamp(2.1rem,5vw,3.4rem);line-height:1.08;margin:18px 0 0;letter-spacing:-.02em}
+  h1 .g{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:1.16rem;max-width:680px;margin:18px 0 26px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+
+  .term{margin:34px 0 6px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0c0f17;box-shadow:0 24px 60px -30px #000}
+  .term .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#0e1119;border-bottom:1px solid var(--line)}
+  .term .bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .term .bar .t{margin-left:10px;color:var(--dim);font-family:var(--mono);font-size:.8rem}
+  .term pre{margin:0;padding:18px 18px 20px;font-family:var(--mono);font-size:.86rem;line-height:1.65;overflow-x:auto}
+  .c-mut{color:var(--dim)} .c-acc{color:var(--acc)} .c-ok{color:var(--ok)} .c-warn{color:var(--warn)} .c-b{color:var(--acc2)} .c-fg{color:var(--fg)} .c-bad{color:var(--bad)}
+
+  section{padding:46px 0;border-top:1px solid var(--line)}
+  .eyebrow{color:var(--acc);font-family:var(--mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
+  h2{font-size:1.7rem;margin:8px 0 6px;letter-spacing:-.01em}
+  .lead{color:var(--mut);max-width:720px;margin:0 0 26px}
+
+  .grid{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:820px){.g3,.g2{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);background:linear-gradient(180deg,var(--card),#0d1119);border-radius:13px;padding:18px}
+  a.card:hover{border-color:var(--acc);text-decoration:none}
+  .card h3{margin:0 0 4px;font-size:1.06rem;display:flex;align-items:center;gap:9px}
+  .card p{margin:6px 0 0;color:var(--mut);font-size:.92rem}
+  .tag{font-family:var(--mono);font-size:.68rem;padding:3px 8px;border-radius:6px;border:1px solid var(--line);color:var(--mut)}
+  .tag.own{color:var(--ok);border-color:#1c3a2a;background:#0e1a14}
+  .tag.term{color:var(--warn);border-color:#3a2f1c;background:#1a150e}
+  .port{margin-left:auto;color:var(--dim);font-family:var(--mono);font-size:.78rem}
+
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:820px){.feat{grid-template-columns:1fr}}
+  .feat .card h3{font-size:1rem}
+  .kpi{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0 0}
+  .kpi div{border:1px solid var(--line);background:var(--bg2);border-radius:11px;padding:14px 18px;min-width:120px}
+  .kpi b{display:block;font-size:1.7rem;font-family:var(--mono);color:var(--acc)}
+  .kpi span{color:var(--mut);font-size:.85rem}
+
+  table{width:100%;border-collapse:collapse;font-size:.92rem;margin-top:8px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-weight:600;font-size:.82rem}
+  td .mono{color:var(--fg)}
+  .yes{color:var(--ok)} .no{color:var(--bad)}
+
+  .codeblock{border:1px solid var(--line);background:#0c0f17;border-radius:11px;padding:16px 18px;font-family:var(--mono);font-size:.85rem;line-height:1.7;overflow-x:auto;white-space:pre}
+  .note{color:var(--dim);font-size:.86rem;margin-top:12px}
+  footer{border-top:1px solid var(--line);padding:34px 0 60px;color:var(--mut)}
+  footer .row{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  footer .spacer{flex:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <span class="brand"><span class="dot"></span> airlock <small>/ showcase</small></span>
+    <span class="spacer"></span>
+    <a href="#harnesses">Harnesses</a>
+    <a href="#skills">Skills</a>
+    <a href="#run">Run it</a>
+    <a href="https://github.com/Okohedeki/airlock-showcase" class="btn">GitHub &#8599;</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <span class="pill"><b>&#9679;</b> 41/41 checks green &middot; verified on a real local model</span>
+    <h1>Run <span class="g">any AI agent</span> as a service you control.</h1>
+    <p class="sub">A runnable, open-source proof that <a href="https://github.com/Okohedeki/airlock">airlock</a> takes the agent you already built &mdash; in LangGraph, smolagents, CrewAI, the OpenAI Agents SDK, the Claude Agent SDK, or your own code &mdash; and runs it as a controlled HTTP service. Six harnesses, one control surface.</p>
+    <div class="cta">
+      <a class="btn pri" href="#run">&#9654; Verify it yourself</a>
+      <a class="btn" href="https://github.com/Okohedeki/airlock-showcase">View the repo</a>
+      <a class="btn" href="https://github.com/Okohedeki/airlock/pull/1">The airlock PR</a>
+    </div>
+
+    <div class="term">
+      <div class="bar"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i><span class="t">~/airlock-showcase &mdash; ./verify.sh</span></div>
+<pre><span class="c-mut">$</span> <span class="c-fg">./verify.sh</span>
+<span class="c-mut">==&gt; building one container per harness, waiting for healthy&hellip;</span>
+<span class="c-mut">==&gt; running the verification grid&hellip;</span>
+
+  test_healthz<span class="c-mut">[langgraph,smolagents,crewai,openai-agents,claude]</span>      <span class="c-ok">PASSED</span>
+  test_manifest_harness<span class="c-mut">[&hellip;]</span>                                  <span class="c-ok">PASSED</span>
+  test_skill_calc_enabled<span class="c-mut">[&hellip;]</span>      <span class="c-mut"># calc &rarr; 200</span>     <span class="c-ok">PASSED</span>
+  test_skill_danger_disabled<span class="c-mut">[&hellip;]</span>   <span class="c-mut"># danger &rarr; 403</span>   <span class="c-ok">PASSED</span>
+  test_skill_unknown_404<span class="c-mut">[&hellip;]</span>       <span class="c-mut"># unknown &rarr; 404</span>  <span class="c-ok">PASSED</span>
+  test_response_shape<span class="c-mut">[&hellip;]</span>                                    <span class="c-ok">PASSED</span>
+  test_streaming_frames<span class="c-mut">[&hellip;]</span>                                  <span class="c-ok">PASSED</span>
+  test_real_model_drives_the_tool<span class="c-mut">[&hellip;]</span>  <span class="c-mut"># multiply &rarr; 437</span> <span class="c-ok">PASSED</span>
+  test_custom_is_terminal                              <span class="c-ok">PASSED</span>
+
+<span class="c-ok">============================ 41 passed in 34.63s ============================</span></pre>
+    </div>
+    <p class="note">Prereq: a tool-calling model on the host at <span class="mono">:11434</span> (e.g. <span class="mono">llama-server -m Qwen2.5-3B-Instruct.gguf --port 11434 --jinja</span>). airlock never hosts inference &mdash; you keep the model, the keys, and the data.</p>
+  </div>
+
+  <section id="harnesses">
+    <div class="eyebrow">Six real examples</div>
+    <h2>One folder per harness. Same controls on every one.</h2>
+    <p class="lead">For the five frameworks airlock <b>extracts the agent's tools and drives the loop itself</b> (OWN mode) &mdash; so guards, approvals, routing, fallback, skills and traces all apply. A plain callable is <b>Terminal</b> (observe-only) &mdash; the honest contrast.</p>
+    <div class="grid g3">
+      <a class="card" href="https://github.com/Okohedeki/airlock-showcase/tree/main/langgraph"><h3>LangGraph <span class="tag own">OWN</span><span class="port">:3101</span></h3><p>A ReAct agent &mdash; airlock extracts its tools and drives the loop.</p></a>
+      <a class="card" href="https://github.com/Okohedeki/airlock-showcase/tree/main/smolagents"><h3>smolagents <span class="tag own">OWN</span><span class="port">:3102</span></h3><p>A <code>CodeAgent</code>, run step-by-step under airlock's controls.</p></a>
+      <a class="card" href="https://github.com/Okohedeki/airlock-showcase/tree/main/crewai"><h3>CrewAI <span class="tag own">OWN</span><span class="port">:3103</span></h3><p>A crew whose agent's tools are extracted and driven.</p></a>
+      <a class="card" href="https://github.com/Okohedeki/airlock-showcase/tree/main/openai-agents"><h3>OpenAI Agents <span class="tag own">OWN</span><span class="port">:3104</span></h3><p>The OpenAI Agents SDK, as a controlled service.</p></a>
+      <a class="card" href="https://github.com/Okohedeki/airlock-showcase/tree/main/claude"><h3>Claude Agent SDK <span class="tag own">OWN</span><span class="port">:3105</span></h3><p>SDK tools &mdash; <b>no Anthropic key</b>; airlock drives its own model.</p></a>
+      <a class="card" href="https://github.com/Okohedeki/airlock-showcase/tree/main/custom"><h3>custom <span class="tag term">TERMINAL</span><span class="port">:3106</span></h3><p>Your own callable &mdash; observe-only, no mid-run control.</p></a>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="eyebrow">The headline feature</div>
+    <h2>Skills on / off &mdash; flip the YAML, change what the agent can do.</h2>
+    <p class="lead">Every example exposes a uniform two-tool contract. A skill maps a tool to the public surface with an enable switch. Disable it and it's gone from the typed endpoint <b>and</b> dropped from the agent's loop &mdash; identically on every harness.</p>
+    <div class="codeblock"><span class="c-mut"># worker.yaml</span>
+<span class="c-b">skills</span>:
+  <span class="c-acc">calc</span>:   { tool: multiply, enabled: <span class="c-ok">true</span>  }   <span class="c-mut"># POST /skills/calc   &rarr; 200</span>
+  <span class="c-acc">danger</span>: { tool: danger,   enabled: <span class="c-bad">false</span> }   <span class="c-mut"># POST /skills/danger &rarr; 403  +  dropped from the loop</span>
+
+<span class="c-mut">$</span> curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:3101/skills/<span class="c-acc">calc</span>   <span class="c-mut"># &rarr;</span> <span class="c-ok">200</span>
+<span class="c-mut">$</span> curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:3101/skills/<span class="c-acc">danger</span> <span class="c-mut"># &rarr;</span> <span class="c-warn">403</span>
+<span class="c-mut">$</span> curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:3101/skills/<span class="c-acc">nope</span>   <span class="c-mut"># &rarr;</span> <span class="c-warn">404</span></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">What airlock owns</div>
+    <h2>Control the loop &mdash; the part a gateway in front of the agent can't.</h2>
+    <p class="lead">Because airlock drives the loop instead of proxying it, these act <i>during</i> a run. The showcase exercises them live.</p>
+    <div class="feat">
+      <div class="card"><h3>&#128296; Tool extraction</h3><p>The framework contributes its tools; airlock runs the loop. No adapter to write.</p></div>
+      <div class="card"><h3>&#128256; Model routing &amp; fallback</h3><p>Switch models per request; retry then rotate to a backup when one fails.</p></div>
+      <div class="card"><h3>&#9995; Mid-run approval</h3><p>Hold a sensitive tool for a human &mdash; approve, edit, override, or deny.</p></div>
+      <div class="card"><h3>&#128202; Live step trace</h3><p>Every model call, tool call and result &mdash; streamed with tokens, cost, latency.</p></div>
+      <div class="card"><h3>&#128274; Per-tenant isolation</h3><p>State, sessions and runs scoped to the authenticated tenant &mdash; structurally.</p></div>
+      <div class="card"><h3>&#129519; Graceful failure</h3><p>An upstream model error is a clear <code>502</code>, never a bare crash.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Feature-derived, not uniform</div>
+    <h2>OWN vs Terminal &mdash; stated honestly.</h2>
+    <table>
+      <tr><th>Harness</th><th>Mode</th><th>Tools extracted &amp; driven</th><th>Skills on/off</th><th>Mid-run control</th></tr>
+      <tr><td class="mono">langgraph &middot; smolagents &middot; crewai &middot; openai-agents &middot; claude</td><td><span class="tag own">OWN</span></td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">full</td></tr>
+      <tr><td class="mono">custom (plain callable)</td><td><span class="tag term">TERMINAL</span></td><td class="no">no</td><td class="no">n/a</td><td class="no">observe-only</td></tr>
+    </table>
+    <p class="note">A <code>custom</code> entrypoint gets the full set too &mdash; if it exposes extractable tools or implements airlock's <code>Planner</code>.</p>
+  </section>
+
+  <section id="run">
+    <div class="eyebrow">Verify it</div>
+    <h2>Clone, point at a model, run one command.</h2>
+    <div class="grid g2">
+      <div>
+        <div class="codeblock"><span class="c-mut"># 1 &middot; a tool-calling model on the host</span>
+llama-server -m Qwen2.5-3B-Instruct.gguf \
+  --port 11434 --jinja
+
+<span class="c-mut"># 2 &middot; the whole showcase, verified</span>
+git clone https://github.com/Okohedeki/airlock-showcase
+cd airlock-showcase
+<span class="c-fg">./verify.sh</span>   <span class="c-mut"># &rarr; 41 passed</span></div>
+      </div>
+      <div>
+        <div class="codeblock"><span class="c-mut"># &hellip;or drive one harness by hand</span>
+docker compose up -d --build langgraph
+
+curl -s localhost:3101/v1/chat/completions \
+  -H 'content-type: application/json' \
+  -d '{"messages":[{"role":"user",
+       "content":"multiply 23 by 19"}]}'
+<span class="c-mut"># &rarr; the agent calls its tool &rarr; 437</span></div>
+        <div class="kpi">
+          <div><b>6</b><span>harnesses</span></div>
+          <div><b>41</b><span>checks green</span></div>
+          <div><b>0</b><span>airlock vendored</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">airlock is installed as a dependency from the public repo (<code>Dockerfile.harness</code>, build-arg <code>AIRLOCK_REF</code>) &mdash; this repo is the consumer, not a copy.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap row">
+    <span class="brand"><span class="dot"></span> airlock <small>/ showcase</small></span>
+    <span class="spacer"></span>
+    <a href="https://github.com/Okohedeki/airlock-showcase">Showcase repo</a>
+    <a href="https://github.com/Okohedeki/airlock">airlock</a>
+    <a href="https://github.com/Okohedeki/airlock/pull/1">PR #1</a>
+    <span class="mono" style="color:var(--dim)">Apache-2.0</span>
+  </div>
+</footer>
+
+</body>
+</html>
